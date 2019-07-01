@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package pubSub;
+
+message String {
+    string value = 1;
+}
+message Token{
+    uint64 value=1;
+}
+
+service PubSubService{
+    rpc Publish(String)returns (String);
+    rpc GetStream(Token)returns(stream String);
+    rpc Subscrib(String)returns(Token);
+}
