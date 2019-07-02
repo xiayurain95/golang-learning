@@ -1,5 +1,7 @@
 package LB
 
+import etcd3 "github.com/coreos/etcd/clientv3"
+
 type resolver struct {
 	serviceName string
 }
