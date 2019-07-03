@@ -12,40 +12,35 @@ import (
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 )
 
-var Prefix = "etcd_naming"
-var client etcd3.Client
-var serverKey string
-var stopSignal = make(chan bool, 1)
-
-func Register(name string, host string, port int, target string, interval time.Duration, ttl int) error {
+func (p *registerBlock) Register(name string, host string, port int, target string, interval time.Duration, ttl int) error {
 	serviceValue := fmt.Sprintf("%s:%d", host, port)
-	serviceKey := fmt.Sprintf("/%s/%s/%s", Prefix, name, serviceValue)
+	serviceKey := fmt.Sprintf("/%s/%s/%s", p.Prefix, name, serviceValue)
 	var err error
-	client, err := etcd3.New(etcd3.Config{Endpoints: strings.Split(target, ",")})
+	p.client, err = etcd3.New(etcd3.Config{Endpoints: strings.Split(target, ",")})
 	if err != nil {
 		fmt.Errorf("grpclb: create etcd3 client failed: %v", err)
 	}
 	go func() {
 		ticker := time.NewTicker(interval)
 		for {
-			resp, _ := client.Grant(context.TODO(), int64(ttl))
-			_, err := client.Get(context.Background(), serviceKey)
+			resp, _ := p.client.Grant(context.TODO(), int64(ttl))
+			_, err := p.client.Get(context.Background(), serviceKey)
 			if err != nil {
 				if err == rpctypes.ErrKeyNotFound {
-					if _, err := client.Put(context.TODO(), serviceKey, serviceValue, etcd3.WithLease(resp.ID)); err != nil {
+					if _, err := p.client.Put(context.TODO(), serviceKey, serviceValue, etcd3.WithLease(resp.ID)); err != nil {
 						log.Printf("grpclb: set service '%s' with ttl to etcd3 failed: %s", name, err.Error())
 					}
 				} else {
 					log.Printf("grpclb: service '%s' connect to etcd3 failed: %s", name, err.Error())
 				}
 			} else {
-				if _, err := client.Put(context.Background(), serviceKey, serviceValue, etcd3.WithLease(resp.ID)); err != nil {
+				if _, err := p.client.Put(context.Background(), serviceKey, serviceValue, etcd3.WithLease(resp.ID)); err != nil {
 					log.Printf("grpclb: refresh service '%s' with ttl to etcd3 failed: %s", name, err.Error())
 				}
 			}
 
 			select {
-			case <-stopSignal:
+			case <-p.stopSignal:
 				return
 			case <-ticker.C:
 			}
@@ -53,15 +48,15 @@ func Register(name string, host string, port int, target string, interval time.D
 	}()
 	return nil
 }
-func Unregister() error {
-	stopSignal <- true
-	stopSignal = make(chan bool, 1)
+func (p *registerBlock) Unregister() error {
+	p.stopSignal <- true
+	p.stopSignal = make(chan bool, 1)
 	var err error
-	if _, err = client.Delete(context.Background(), serverKey); err != nil {
+	if _, err = p.client.Delete(context.Background(), p.serverKey); err != nil {
 
-		log.Printf("grpclb: deregister '%s' failed: %s", serverKey, err.Error())
+		log.Printf("grpclb: deregister '%s' failed: %s", p.serverKey, err.Error())
 	} else {
-		log.Printf("grpclb: deregister '%s' ok.", serverKey)
+		log.Printf("grpclb: deregister '%s' ok.", p.serverKey)
 	}
 	return err
 }

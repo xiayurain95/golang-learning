@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/naming"
 )
 
-func (re *resolver) Reslove(target string) (naming.Watcher, error) {
+func (re *resolver) Resolve(target string) (naming.Watcher, error) {
 	if re.serviceName == "" {
 		return nil, errors.New("no service name provided")
 	}

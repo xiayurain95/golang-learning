@@ -12,7 +12,7 @@ import (
 func (w *watcher) Close() {
 }
 func (w *watcher) Next() ([]*naming.Update, error) {
-	prefix := fmt.Sprintf("/%s/%s", Prefix, w.re.serviceName)
+	prefix := fmt.Sprintf("/%s/%s", w.Prefix, w.re.serviceName)
 	if !w.isInitialized {
 		resp, err := w.client.Get(context.Background(), prefix, etcd3.WithPrefix())
 		if err != nil {

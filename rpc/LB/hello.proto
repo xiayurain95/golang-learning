@@ -1,0 +1,8 @@
+syntax="proto3";
+package LB;
+message String{
+    string Value=1;
+}
+service Greeter{
+    rpc SayHello(String) returns (String);
+}
