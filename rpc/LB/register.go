@@ -18,7 +18,8 @@ func (p *registerBlock) Register(name string, host string, port int, target stri
 	var err error
 	p.client, err = etcd3.New(etcd3.Config{Endpoints: strings.Split(target, ",")})
 	if err != nil {
-		fmt.Errorf("grpclb: create etcd3 client failed: %v", err)
+		log.Printf("grpclb: create etcd3 client failed: %v", err)
+		return fmt.Errorf("grpclb: create etcd3 client failed: %v", err)
 	}
 	go func() {
 		ticker := time.NewTicker(interval)
@@ -49,11 +50,12 @@ func (p *registerBlock) Register(name string, host string, port int, target stri
 	return nil
 }
 func (p *registerBlock) Unregister() error {
+	log.Printf("deregister pre-start")
 	p.stopSignal <- true
 	p.stopSignal = make(chan bool, 1)
+	log.Printf("deregister start")
 	var err error
 	if _, err = p.client.Delete(context.Background(), p.serverKey); err != nil {
-
 		log.Printf("grpclb: deregister '%s' failed: %s", p.serverKey, err.Error())
 	} else {
 		log.Printf("grpclb: deregister '%s' ok.", p.serverKey)

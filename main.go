@@ -1,8 +1,10 @@
 package main
 
-import rpc "learningGo/rpc/hello"
+import  "learningGo/rpc/LB"
 
 func main() {
-	go rpc.HelloRpc()
-	rpc.ChannelClient()
+	//go rpc.HelloRpc()
+	//rpc.ChannelClient()
+	//LB.HelloServer()
+	LB.HelloClient()
 }

@@ -9,10 +9,10 @@ import (
 	"google.golang.org/grpc/naming"
 )
 
-func (w *watcher) Close() {
+func (w watcher) Close() {
 }
-func (w *watcher) Next() ([]*naming.Update, error) {
-	prefix := fmt.Sprintf("/%s/%s", w.Prefix, w.re.serviceName)
+func (w watcher) Next() ([]*naming.Update, error) {
+	prefix := fmt.Sprintf("/%s/%s", w.re.Prefix, w.re.serviceName)
 	if !w.isInitialized {
 		resp, err := w.client.Get(context.Background(), prefix, etcd3.WithPrefix())
 		if err != nil {

@@ -24,19 +24,19 @@ func HelloServer() {
 	var (
 		serv = flag.String("service", "hello_service", "service name")
 		port = flag.Int("port", 9996, "port of the service")
-		reg  = flag.String("etcd address", "localhost:2379", "address of etcd service")
+		reg  = flag.String("etcd", "localhost:2379", "address of etcd service")
 	)
 	flag.Parse()
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
-		fmt.Errorf("Listen to socket 9996 failed")
+		log.Printf("Listen to socket 9996 failed")
 		return
 	}
 
-	registerIns := NewregisterBlock("etcd_naming", *serv, make(chan bool))
+	registerIns := NewregisterBlock("etcd_naming", *serv)
 	if err := registerIns.Register(*serv, "127.0.0.1", *port, *reg, time.Second*10, 15); err != nil {
-		fmt.Errorf("Rigster service fails")
+		log.Printf("Rigster service fails")
 		return
 	}
 
@@ -46,6 +46,7 @@ func HelloServer() {
 		s := <-ch
 		log.Printf("receive signal '%v'", s)
 		registerIns.Unregister()
+		log.Printf("unregister complete")
 		os.Exit(1)
 	}()
 
@@ -53,7 +54,7 @@ func HelloServer() {
 	grpcServer := grpc.NewServer()
 	RegisterGreeterServer(grpcServer, new(helloImp))
 	if err := grpcServer.Serve(lis); err != nil {
-		fmt.Errorf("grpcServer.Server failed")
+		log.Printf("grpcServer.Server failed")
 		return
 	}
 
