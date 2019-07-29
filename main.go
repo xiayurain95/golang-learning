@@ -1,10 +1,14 @@
 package main
 
-import  "learningGo/rpc/LB"
+import "learningGo/code"
 
 func main() {
 	//go rpc.HelloRpc()
 	//rpc.ChannelClient()
 	//LB.HelloServer()
-	LB.HelloClient()
+	//LB.HelloClient()
+	s := code.NewSlots(5)
+	go code.Comsumer(s)
+	code.Producer(s)
+
 }
